@@ -1,141 +1,151 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Doctors = () => {
-    const { user } = useAuth();
+    const { user } = useContext(AuthContext);
     const [doctors, setDoctors] = useState([]);
-    const [sections, setSections] = useState([]);
-    const [form, setForm] = useState({
+    const [formData, setFormData] = useState({
         full_name: '',
         category: '',
         birth_date: '',
         specialization: '',
         experience: '',
-        section_id: '',
+        section_id: ''
     });
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchDoctors = async () => {
-            try {
-                const response = await axios.get('http://localhost:8080/api/doctors');
-                setDoctors(response.data);
-            } catch (err) {
-                setError(err.response?.data?.error || 'Failed to fetch doctors');
-            }
-        };
-
-        const fetchSections = async () => {
-            try {
-                const response = await axios.get('http://localhost:8080/api/sections');
-                setSections(response.data);
-            } catch (err) {
-                setError(err.response?.data?.error || 'Failed to fetch sections');
-            }
-        };
-
         fetchDoctors();
-        if (user?.role === 'registrar') fetchSections();
-    }, [user]);
+    }, []);
 
-    const handleInputChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const fetchDoctors = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:8080/api/doctors', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log('Fetched doctors:', response.data);
+            setDoctors(response.data);
+            setError('');
+        } catch (error) {
+            const errorMsg = error.response?.data?.error || error.message;
+            setError(`Error fetching doctors: ${errorMsg}`);
+            console.error('Fetch error:', error);
+        }
+    };
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const submitData = {
+            ...formData,
+            experience: parseInt(formData.experience, 10) || 0,
+            section_id: parseInt(formData.section_id, 10) || 0
+        };
         try {
-            const response = await axios.post('http://localhost:8080/api/doctors', form);
-            setDoctors([...doctors, response.data]);
-            setForm({ full_name: '', category: '', birth_date: '', specialization: '', experience: '', section_id: '' });
-        } catch (err) {
-            setError(err.response?.data?.error || 'Failed to create doctor');
+            const token = localStorage.getItem('token');
+            const response = await axios.post('http://localhost:8080/api/doctors', submitData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log('Post response:', response.data);
+            fetchDoctors();
+            setFormData({
+                full_name: '',
+                category: '',
+                birth_date: '',
+                specialization: '',
+                experience: '',
+                section_id: ''
+            });
+            setError('');
+            showToast('Doctor created successfully');
+        } catch (error) {
+            const errorMsg = error.response?.data?.error || error.message;
+            setError(`Error creating doctor: ${errorMsg}`);
+            console.error('Post error:', error);
         }
     };
 
+    const showToast = (message) => {
+        alert(message);
+    };
+
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Doctors</h1>
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-
+        <div className="p-4">
+            <h2 className="text-2xl font-bold mb-4">Doctors</h2>
+            {error && <div className="text-red-500 mb-4">{error}</div>}
             {user?.role === 'registrar' && (
-                <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4">Create Doctor</h2>
-                    <div className="grid grid-cols-1 gap-4">
-                        <input
-                            type="text"
-                            name="full_name"
-                            value={form.full_name}
-                            onChange={handleInputChange}
-                            placeholder="Full Name"
-                            className="p-2 border rounded"
-                        />
-                        <input
-                            type="text"
-                            name="category"
-                            value={form.category}
-                            onChange={handleInputChange}
-                            placeholder="Category"
-                            className="p-2 border rounded"
-                        />
-                        <input
-                            type="date"
-                            name="birth_date"
-                            value={form.birth_date}
-                            onChange={handleInputChange}
-                            className="p-2 border rounded"
-                        />
-                        <input
-                            type="text"
-                            name="specialization"
-                            value={form.specialization}
-                            onChange={handleInputChange}
-                            placeholder="Specialization"
-                            className="p-2 border rounded"
-                        />
-                        <input
-                            type="number"
-                            name="experience"
-                            value={form.experience}
-                            onChange={handleInputChange}
-                            placeholder="Experience (years)"
-                            className="p-2 border rounded"
-                        />
-                        <select
-                            name="section_id"
-                            value={form.section_id}
-                            onChange={handleInputChange}
-                            className="p-2 border rounded"
-                        >
-                            <option value="">Select Section</option>
-                            {sections.map((section) => (
-                                <option key={section.ID} value={section.ID}>{section.Name}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={handleSubmit}
-                            className="bg-green-600 text-white p-2 rounded hover:bg-green-700"
-                        >
-                            Create Doctor
-                        </button>
-                    </div>
-                </div>
+                <form onSubmit={handleSubmit} className="mb-4">
+                    <input
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleChange}
+                        placeholder="Full Name"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        placeholder="Category"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="birth_date"
+                        value={formData.birth_date}
+                        onChange={handleChange}
+                        placeholder="Birth Date (YYYY-MM-DD)"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="specialization"
+                        value={formData.specialization}
+                        onChange={handleChange}
+                        placeholder="Specialization"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        placeholder="Experience"
+                        type="number"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="section_id"
+                        value={formData.section_id}
+                        onChange={handleChange}
+                        placeholder="Section ID"
+                        type="number"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <button type="submit" className="bg-blue-500 text-white p-2">
+                        Create
+                    </button>
+                </form>
             )}
-
-            <div className="grid grid-cols-1 gap-4">
-                {doctors.map((doctor) => (
-                    <div key={doctor.ID} className="bg-white p-4 rounded-lg shadow-md">
-                        <h3 className="text-lg font-semibold">{doctor.FullName}</h3>
-                        <p>Category: {doctor.Category}</p>
-                        <p>Birth Date: {doctor.BirthDate}</p>
-                        <p>Specialization: {doctor.Specialization}</p>
-                        <p>Experience: {doctor.Experience} years</p>
-                        <p>Section: {doctor.Section?.Name || 'N/A'}</p>
-                        <p>Created by: {doctor.User?.Username || 'Unknown'} ({doctor.User?.Role || 'Unknown'})</p>
-                    </div>
-                ))}
-            </div>
+            <ul>
+                {doctors.length > 0 ? (
+                    doctors.map((doctor) => (
+                        <li key={doctor.id} className="mb-2">
+                            {doctor.full_name} - {doctor.category} - {doctor.birth_date} - {doctor.specialization} - {doctor.experience} yrs - Section ID: {doctor.section_id}
+                        </li>
+                    ))
+                ) : (
+                    <li>No doctors found</li>
+                )}
+            </ul>
         </div>
     );
 };

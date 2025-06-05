@@ -5,13 +5,16 @@ import { useAuth } from '../context/AuthContext';
 const Sections = () => {
     const { user } = useAuth();
     const [sections, setSections] = useState([]);
-    const [form, setForm] = useState({ name: '' });
+    const [form, setForm] = useState({ name: '', address: '' });
     const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchSections = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/sections');
+                const token = localStorage.getItem('token'); // Добавляем токен для авторизации
+                const response = await axios.get('http://localhost:8080/api/sections', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 setSections(response.data);
             } catch (err) {
                 setError(err.response?.data?.error || 'Failed to fetch sections');
@@ -27,9 +30,12 @@ const Sections = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/api/sections', form);
+            const token = localStorage.getItem('token'); // Добавляем токен для авторизации
+            const response = await axios.post('http://localhost:8080/api/sections', form, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setSections([...sections, response.data]);
-            setForm({ name: '' });
+            setForm({ name: '', address: '' });
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to create section');
         }
@@ -37,7 +43,10 @@ const Sections = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://localhost:8080/api/sections/${id}`);
+            const token = localStorage.getItem('token'); // Добавляем токен для авторизации
+            await axios.delete(`http://localhost:8080/api/sections/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setSections(sections.filter((section) => section.ID !== id));
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to delete section');
@@ -63,6 +72,16 @@ const Sections = () => {
                         onChange={handleInputChange}
                         placeholder="Section Name"
                         className="p-2 border rounded"
+                        required
+                    />
+                    <input
+                        type="text"
+                        name="address"
+                        value={form.address}
+                        onChange={handleInputChange}
+                        placeholder="Address"
+                        className="p-2 border rounded"
+                        required
                     />
                     <button
                         onClick={handleSubmit}
@@ -77,7 +96,7 @@ const Sections = () => {
                 {sections.map((section) => (
                     <div key={section.ID} className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
                         <div>
-                            <h3 className="text-lg font-semibold">{section.Name}</h3>
+                            <h3 className="text-lg font-semibold">{section.name}</h3>
                         </div>
                         <button
                             onClick={() => handleDelete(section.ID)}

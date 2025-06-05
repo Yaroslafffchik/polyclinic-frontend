@@ -1,7 +1,7 @@
+// src/pages/Visits.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-
 
 const Visits = () => {
     const { user } = useContext(AuthContext);
@@ -9,72 +9,168 @@ const Visits = () => {
     const [formData, setFormData] = useState({
         patient_id: '',
         doctor_id: '',
-        visit_date: '',
-        status: ''
+        date: '',
+        complaints: '',
+        diagnosis: '',
+        prescription: '',
+        sick_leave: false
     });
-
-    useEffect(() => {
-        fetchVisits();
-    }, []);
+    const [loading, setLoading] = useState(true);
 
     const fetchVisits = async () => {
         try {
+            if (!user) {
+                setLoading(false);
+                return; // Прерываем, если пользователь не авторизован
+            }
             const token = localStorage.getItem('token');
             const response = await axios.get('http://localhost:8080/api/visits', {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log('Fetched visits:', response.data); // Лог для отладки
             setVisits(response.data);
         } catch (error) {
-            showToast('Error fetching visits');
+            console.error('Fetch error:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchVisits();
+    }, [user]);
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!user) {
+            alert('Please log in to create a visit');
+            return;
+        }
+        const submitData = {
+            ...formData,
+            patient_id: parseInt(formData.patient_id, 10) || 0,
+            doctor_id: parseInt(formData.doctor_id, 10) || 0,
+            sick_leave: formData.sick_leave === 'true' || formData.sick_leave === true
+        };
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:8080/api/visits', formData, {
+            const response = await axios.post('http://localhost:8080/api/visits', submitData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchVisits();
             setFormData({
                 patient_id: '',
                 doctor_id: '',
-                visit_date: '',
-                status: ''
+                date: '',
+                complaints: '',
+                diagnosis: '',
+                prescription: '',
+                sick_leave: false
             });
-            showToast('Visit created successfully');
+            alert('Visit created successfully');
         } catch (error) {
-            showToast('Error creating visit');
+            const errorMsg = error.response?.data?.error || error.message;
+            alert(`Error creating visit: ${errorMsg}`);
+            console.error('Post error:', error);
         }
     };
 
-    const showToast = (message) => {
-        alert(message); // Placeholder for toast
-    };
+    if (loading) {
+        return <div className="p-4">Loading...</div>; // Показываем загрузку
+    }
+
+    if (!user) {
+        return <div className="p-4">Please log in to view visits</div>; // Сообщение при отсутствии авторизации
+    }
 
     return (
         <div className="p-4">
             <h2 className="text-2xl font-bold mb-4">Visits</h2>
-            {user.role === 'registrar' && (
+            {(user.role === 'registrar' || user.role === 'doctor') && (
                 <form onSubmit={handleSubmit} className="mb-4">
-                    <input name="patient_id" value={formData.patient_id} onChange={handleChange} placeholder="Patient ID" className="border p-2 mr-2" />
-                    <input name="doctor_id" value={formData.doctor_id} onChange={handleChange} placeholder="Doctor ID" className="border p-2 mr-2" />
-                    <input name="visit_date" value={formData.visit_date} onChange={handleChange} placeholder="Visit Date (YYYY-MM-DD)" className="border p-2 mr-2" />
-                    <input name="status" value={formData.status} onChange={handleChange} placeholder="Status" className="border p-2 mr-2" />
-                    <button type="submit" className="bg-blue-500 text-white p-2">Create</button>
+                    <input
+                        name="patient_id"
+                        value={formData.patient_id}
+                        onChange={handleChange}
+                        placeholder="Patient ID"
+                        type="number"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="doctor_id"
+                        value={formData.doctor_id}
+                        onChange={handleChange}
+                        placeholder="Doctor ID"
+                        type="number"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="date"
+                        value={formData.date}
+                        onChange={handleChange}
+                        placeholder="Date (YYYY-MM-DD)"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="complaints"
+                        value={formData.complaints}
+                        onChange={handleChange}
+                        placeholder="Complaints"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="diagnosis"
+                        value={formData.diagnosis}
+                        onChange={handleChange}
+                        placeholder="Diagnosis"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <input
+                        name="prescription"
+                        value={formData.prescription}
+                        onChange={handleChange}
+                        placeholder="Prescription"
+                        className="border p-2 mr-2"
+                        required
+                    />
+                    <label className="mr-2">
+                        Sick Leave:
+                        <input
+                            name="sick_leave"
+                            type="checkbox"
+                            checked={formData.sick_leave}
+                            onChange={handleChange}
+                            className="ml-2"
+                        />
+                    </label>
+                    <button type="submit" className="bg-blue-500 text-white p-2">
+                        Create
+                    </button>
                 </form>
             )}
             <ul>
-                {visits.map((visit) => (
-                    <li key={visit.ID} className="mb-2">
-                        Patient ID: {visit.patient_id} - Doctor ID: {visit.doctor_id} - {visit.visit_date}
-                    </li>
-                ))}
+                {visits.length > 0 ? (
+                    visits.map((visit) => (
+                        <li key={visit.ID} className="mb-2">
+                            Patient ID: {visit.patient_id} - Doctor ID: {visit.doctor_id} - Date: {visit.date}
+                        </li>
+                    ))
+                ) : (
+                    <li>No visits found</li>
+                )}
             </ul>
         </div>
     );

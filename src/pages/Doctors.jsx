@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import DoctorCard from './DoctorCard';
 
 const Doctors = () => {
     const { user } = useContext(AuthContext);
@@ -30,7 +31,7 @@ const Doctors = () => {
             setError('');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
-            setError(`Error fetching doctors: ${errorMsg}`);
+            setError(`Ошибка при загрузке врачей: ${errorMsg}`);
             console.error('Fetch error:', error);
         }
     };
@@ -62,11 +63,28 @@ const Doctors = () => {
                 section_id: ''
             });
             setError('');
-            showToast('Doctor created successfully');
+            showToast('Врач создан успешно');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
-            setError(`Error creating doctor: ${errorMsg}`);
+            setError(`Ошибка при создании врача: ${errorMsg}`);
             console.error('Post error:', error);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Вы уверены, что хотите удалить врача?')) {
+            try {
+                const token = localStorage.getItem('token');
+                await axios.delete(`http://localhost:8080/api/doctors/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                fetchDoctors();
+                showToast('Врач удален успешно');
+            } catch (error) {
+                const errorMsg = error.response?.data?.error || error.message;
+                setError(`Ошибка при удалении врача: ${errorMsg}`);
+                console.error('Delete error:', error);
+            }
         }
     };
 
@@ -75,77 +93,85 @@ const Doctors = () => {
     };
 
     return (
-        <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Doctors</h2>
+        <div className="container mx-auto p-4">
+            <h2 className="text-2xl font-bold mb-4">Врачи</h2>
             {error && <div className="text-red-500 mb-4">{error}</div>}
             {user?.role === 'registrar' && (
-                <form onSubmit={handleSubmit} className="mb-4">
-                    <input
-                        name="full_name"
-                        value={formData.full_name}
-                        onChange={handleChange}
-                        placeholder="Full Name"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        placeholder="Category"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="birth_date"
-                        value={formData.birth_date}
-                        onChange={handleChange}
-                        placeholder="Birth Date (YYYY-MM-DD)"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="specialization"
-                        value={formData.specialization}
-                        onChange={handleChange}
-                        placeholder="Specialization"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="experience"
-                        value={formData.experience}
-                        onChange={handleChange}
-                        placeholder="Experience"
-                        type="number"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="section_id"
-                        value={formData.section_id}
-                        onChange={handleChange}
-                        placeholder="Section ID"
-                        type="number"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <button type="submit" className="bg-blue-500 text-white p-2">
-                        Create
-                    </button>
-                </form>
+                <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
+                    <h3 className="text-xl font-semibold mb-4">Создать врача</h3>
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                            name="full_name"
+                            value={formData.full_name}
+                            onChange={handleChange}
+                            placeholder="ФИО"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="category"
+                            value={formData.category}
+                            onChange={handleChange}
+                            placeholder="Категория"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="birth_date"
+                            value={formData.birth_date}
+                            onChange={handleChange}
+                            placeholder="Дата рождения (ГГГГ-ММ-ДД)"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="specialization"
+                            value={formData.specialization}
+                            onChange={handleChange}
+                            placeholder="Специализация"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="experience"
+                            value={formData.experience}
+                            onChange={handleChange}
+                            placeholder="Стаж"
+                            type="number"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="section_id"
+                            value={formData.section_id}
+                            onChange={handleChange}
+                            placeholder="ID участка"
+                            type="number"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <div className="col-span-2">
+                            <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                                Создать
+                            </button>
+                        </div>
+                    </form>
+                </div>
             )}
-            <ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {doctors.length > 0 ? (
                     doctors.map((doctor) => (
-                        <li key={doctor.id} className="mb-2">
-                            {doctor.full_name} - {doctor.category} - {doctor.birth_date} - {doctor.specialization} - {doctor.experience} yrs - Section ID: {doctor.section_id}
-                        </li>
+                        <DoctorCard
+                            key={doctor.id}
+                            doctor={doctor}
+                            onDelete={handleDelete}
+                            role={user?.role}
+                        />
                     ))
                 ) : (
-                    <li>No doctors found</li>
+                    <p>Врачи не найдены</p>
                 )}
-            </ul>
+            </div>
         </div>
     );
 };

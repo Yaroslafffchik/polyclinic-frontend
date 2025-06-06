@@ -1,7 +1,7 @@
-// src/pages/Patients.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import PatientCard from './PatientCard';
 
 const Patients = () => {
     const { user } = useContext(AuthContext);
@@ -11,7 +11,8 @@ const Patients = () => {
         address: '',
         gender: '',
         age: '',
-        insurance_number: ''
+        insurance_number: '',
+        doctor_id: ''
     });
     const [editPatientId, setEditPatientId] = useState(null);
 
@@ -25,10 +26,10 @@ const Patients = () => {
             const response = await axios.get('http://localhost:8080/api/patients', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Fetched patients:', response.data); // Лог для отладки
+            console.log('Fetched patients:', response.data);
             setPatients(response.data);
         } catch (error) {
-            showToast('Error fetching patients');
+            showToast('Ошибка при загрузке пациентов');
             console.error('Fetch error:', error);
         }
     };
@@ -41,7 +42,8 @@ const Patients = () => {
         e.preventDefault();
         const submitData = {
             ...formData,
-            age: parseInt(formData.age, 10) || 0
+            age: parseInt(formData.age, 10) || 0,
+            doctor_id: parseInt(formData.doctor_id, 10) || 0
         };
         try {
             const token = localStorage.getItem('token');
@@ -61,12 +63,13 @@ const Patients = () => {
                 address: '',
                 gender: '',
                 age: '',
-                insurance_number: ''
+                insurance_number: '',
+                doctor_id: ''
             });
-            showToast(editPatientId ? 'Patient updated successfully' : 'Patient created successfully');
+            showToast(editPatientId ? 'Пациент обновлен успешно' : 'Пациент создан успешно');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
-            showToast(`Error saving patient: ${errorMsg}`);
+            showToast(`Ошибка при сохранении пациента: ${errorMsg}`);
             console.error('Post error:', error);
         }
     };
@@ -78,7 +81,8 @@ const Patients = () => {
             address: patient.address || '',
             gender: patient.gender || '',
             age: (patient.age || '').toString(),
-            insurance_number: patient.insurance_number || ''
+            insurance_number: patient.insurance_number || '',
+            doctor_id: (patient.DoctorID || '').toString()
         });
     };
 
@@ -87,84 +91,93 @@ const Patients = () => {
     };
 
     return (
-        <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Patients</h2>
+        <div className="container mx-auto p-4">
+            <h2 className="text-2xl font-bold mb-4">Пациенты</h2>
             {user?.role === 'registrar' && (
-                <form onSubmit={handleSubmit} className="mb-4">
-                    <input
-                        name="full_name"
-                        value={formData.full_name}
-                        onChange={handleChange}
-                        placeholder="Full Name"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        placeholder="Address"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleChange}
-                        placeholder="Gender (M/F)"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="age"
-                        value={formData.age}
-                        onChange={handleChange}
-                        placeholder="Age"
-                        type="number"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <input
-                        name="insurance_number"
-                        value={formData.insurance_number}
-                        onChange={handleChange}
-                        placeholder="Insurance Number"
-                        className="border p-2 mr-2"
-                        required
-                    />
-                    <button type="submit" className="bg-blue-500 text-white p-2">
-                        {editPatientId ? 'Update' : 'Create'}
-                    </button>
-                    {editPatientId && (
-                        <button
-                            type="button"
-                            onClick={() => setEditPatientId(null)}
-                            className="bg-red-500 text-white p-2 ml-2"
-                        >
-                            Cancel
-                        </button>
-                    )}
-                </form>
-            )}
-            <ul>
-                {patients.length > 0 ? (
-                    patients.map((patient) => (
-                        <li key={patient.ID} className="mb-2">
-                            {patient.full_name} - {patient.age} yrs
-                            {user?.role === 'registrar' && (
+                <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
+                    <h3 className="text-xl font-semibold mb-4">{editPatientId ? 'Редактировать пациента' : 'Создать пациента'}</h3>
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                            name="full_name"
+                            value={formData.full_name}
+                            onChange={handleChange}
+                            placeholder="ФИО"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder="Адрес"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            placeholder="Пол (М/Ж)"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="age"
+                            value={formData.age}
+                            onChange={handleChange}
+                            placeholder="Возраст"
+                            type="number"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="insurance_number"
+                            value={formData.insurance_number}
+                            onChange={handleChange}
+                            placeholder="Номер полиса"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="doctor_id"
+                            value={formData.doctor_id}
+                            onChange={handleChange}
+                            placeholder="ID врача"
+                            type="number"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <div className="col-span-2 flex space-x-2">
+                            <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                                {editPatientId ? 'Обновить' : 'Создать'}
+                            </button>
+                            {editPatientId && (
                                 <button
-                                    onClick={() => handleEdit(patient)}
-                                    className="bg-yellow-500 text-white p-1 ml-2"
+                                    type="button"
+                                    onClick={() => setEditPatientId(null)}
+                                    className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
                                 >
-                                    Edit
+                                    Отмена
                                 </button>
                             )}
-                        </li>
+                        </div>
+                    </form>
+                </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {patients.length > 0 ? (
+                    patients.map((patient) => (
+                        <PatientCard
+                            key={patient.ID}
+                            patient={patient}
+                            onEdit={handleEdit}
+                            role={user?.role}
+                        />
                     ))
                 ) : (
-                    <li>No patients found</li>
+                    <p>Пациенты не найдены</p>
                 )}
-            </ul>
+            </div>
         </div>
     );
 };

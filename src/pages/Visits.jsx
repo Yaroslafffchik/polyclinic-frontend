@@ -1,4 +1,3 @@
-// src/pages/Visits.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
@@ -21,13 +20,13 @@ const Visits = () => {
         try {
             if (!user) {
                 setLoading(false);
-                return; // Прерываем, если пользователь не авторизован
+                return;
             }
             const token = localStorage.getItem('token');
             const response = await axios.get('http://localhost:8080/api/visits', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Fetched visits:', response.data); // Лог для отладки
+            console.log('Fetched visits:', response.data);
             setVisits(response.data);
         } catch (error) {
             console.error('Fetch error:', error);
@@ -51,7 +50,7 @@ const Visits = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) {
-            alert('Please log in to create a visit');
+            alert('Пожалуйста, войдите, чтобы создать посещение');
             return;
         }
         const submitData = {
@@ -75,32 +74,32 @@ const Visits = () => {
                 prescription: '',
                 sick_leave: false
             });
-            alert('Visit created successfully');
+            alert('Посещение создано успешно');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
-            alert(`Error creating visit: ${errorMsg}`);
+            alert(`Ошибка при создании посещения: ${errorMsg}`);
             console.error('Post error:', error);
         }
     };
 
     if (loading) {
-        return <div className="p-4">Loading...</div>; // Показываем загрузку
+        return <div className="p-4">Загрузка...</div>;
     }
 
     if (!user) {
-        return <div className="p-4">Please log in to view visits</div>; // Сообщение при отсутствии авторизации
+        return <div className="p-4">Пожалуйста, войдите, чтобы просмотреть посещения</div>;
     }
 
     return (
         <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Visits</h2>
+            <h2 className="text-2xl font-bold mb-4">Посещения</h2>
             {(user.role === 'registrar' || user.role === 'doctor') && (
                 <form onSubmit={handleSubmit} className="mb-4">
                     <input
                         name="patient_id"
                         value={formData.patient_id}
                         onChange={handleChange}
-                        placeholder="Patient ID"
+                        placeholder="ID пациента"
                         type="number"
                         className="border p-2 mr-2"
                         required
@@ -109,7 +108,7 @@ const Visits = () => {
                         name="doctor_id"
                         value={formData.doctor_id}
                         onChange={handleChange}
-                        placeholder="Doctor ID"
+                        placeholder="ID врача"
                         type="number"
                         className="border p-2 mr-2"
                         required
@@ -118,7 +117,7 @@ const Visits = () => {
                         name="date"
                         value={formData.date}
                         onChange={handleChange}
-                        placeholder="Date (YYYY-MM-DD)"
+                        placeholder="Дата (ГГГГ-ММ-ДД)"
                         className="border p-2 mr-2"
                         required
                     />
@@ -126,7 +125,7 @@ const Visits = () => {
                         name="complaints"
                         value={formData.complaints}
                         onChange={handleChange}
-                        placeholder="Complaints"
+                        placeholder="Жалобы"
                         className="border p-2 mr-2"
                         required
                     />
@@ -134,7 +133,7 @@ const Visits = () => {
                         name="diagnosis"
                         value={formData.diagnosis}
                         onChange={handleChange}
-                        placeholder="Diagnosis"
+                        placeholder="Диагноз"
                         className="border p-2 mr-2"
                         required
                     />
@@ -142,12 +141,12 @@ const Visits = () => {
                         name="prescription"
                         value={formData.prescription}
                         onChange={handleChange}
-                        placeholder="Prescription"
+                        placeholder="Назначения"
                         className="border p-2 mr-2"
                         required
                     />
                     <label className="mr-2">
-                        Sick Leave:
+                        Больничный:
                         <input
                             name="sick_leave"
                             type="checkbox"
@@ -157,7 +156,7 @@ const Visits = () => {
                         />
                     </label>
                     <button type="submit" className="bg-blue-500 text-white p-2">
-                        Create
+                        Создать
                     </button>
                 </form>
             )}
@@ -165,11 +164,11 @@ const Visits = () => {
                 {visits.length > 0 ? (
                     visits.map((visit) => (
                         <li key={visit.ID} className="mb-2">
-                            Patient ID: {visit.patient_id} - Doctor ID: {visit.doctor_id} - Date: {visit.date}
+                            ID пациента: {visit.patient_id} - ID врача: {visit.doctor_id} - Дата: {visit.date}
                         </li>
                     ))
                 ) : (
-                    <li>No visits found</li>
+                    <li>Посещения не найдены</li>
                 )}
             </ul>
         </div>

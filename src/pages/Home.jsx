@@ -5,12 +5,12 @@ const Home = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Welcome to Polyclinic</h1>
-            <p className="text-lg">You are logged in as <span className="font-semibold">{user?.role}</span>.</p>
+            <h1 className="text-2xl font-bold mb-4">Добро пожаловать в поликлинику</h1>
+            <p className="text-lg">Вы вошли как <span className="font-semibold">{user?.role === 'registrar' ? 'Регистратор' : 'Врач'}</span>.</p>
             {user?.role === 'registrar' ? (
-                <p>Use the navigation to manage patients, doctors, and sections.</p>
+                <p>Используйте навигацию для управления пациентами, врачами и участками.</p>
             ) : (
-                <p>Use the navigation to view patients and doctors.</p>
+                <p>Используйте навигацию для просмотра пациентов и врачей.</p>
             )}
         </div>
     );

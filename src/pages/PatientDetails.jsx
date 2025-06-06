@@ -46,7 +46,7 @@ const PatientDetails = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Карточка пациента</h1>
+            <h1 className="text-2xl font-bold mb-4">Информация о пациенте</h1>
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <div className="flex items-center mb-4">
                     <img

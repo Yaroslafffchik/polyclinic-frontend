@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import patientPhoto from './photos/patient.png';
+import patientPhoto from '../photos/patient.png';
 
 const PatientCard = ({ patient, onEdit, role }) => {
     return (

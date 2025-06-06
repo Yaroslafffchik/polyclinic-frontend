@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import doctorPhoto from '../photos/doctor.png';
 
 const DoctorDetails = () => {
     const { id } = useParams();
@@ -43,11 +44,11 @@ const DoctorDetails = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Карточка врача</h1>
+            <h1 className="text-2xl font-bold mb-4">Информация о враче</h1>
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <div className="flex items-center mb-4">
                     <img
-                        src="https://via.placeholder.com/100"
+                        src={doctorPhoto}
                         alt={`Фото врача ${doctor.full_name}`}
                         className="w-24 h-24 rounded-full mr-4"
                     />

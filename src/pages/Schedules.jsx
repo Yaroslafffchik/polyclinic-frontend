@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 const Schedules = () => {
     const { user } = useContext(AuthContext);
     const [schedules, setSchedules] = useState([]);
+    const [doctors, setDoctors] = useState([]);
     const [formData, setFormData] = useState({
         doctor_id: '',
         selectedDays: [],
@@ -17,6 +18,7 @@ const Schedules = () => {
 
     useEffect(() => {
         fetchSchedules();
+        fetchDoctors();
     }, []);
 
     const fetchSchedules = async () => {
@@ -32,6 +34,18 @@ const Schedules = () => {
             const errorMsg = error.response?.data?.error || error.message;
             setError(`Ошибка при загрузке расписаний: ${errorMsg}`);
             console.error('Fetch error:', error);
+        }
+    };
+
+    const fetchDoctors = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:8080/api/doctors', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setDoctors(response.data);
+        } catch (error) {
+            console.error('Fetch doctors error:', error);
         }
     };
 
@@ -57,12 +71,12 @@ const Schedules = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.selectedDays.length === 0) {
-            setError('Выберите хотя бы один день');
+        if (!formData.doctor_id || formData.selectedDays.length === 0 || !formData.time || !formData.room) {
+            setError('Пожалуйста, заполните все обязательные поля');
             return;
         }
         const submitData = {
-            doctor_id: parseInt(formData.doctor_id, 10) || 0,
+            doctor_id: parseInt(formData.doctor_id, 10) || null,
             days: formData.selectedDays.join(', '),
             time: formData.time,
             room: formData.room
@@ -100,15 +114,20 @@ const Schedules = () => {
                 <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
                     <h3 className="text-xl font-semibold mb-4">Создать расписание</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-                        <input
+                        <select
                             name="doctor_id"
                             value={formData.doctor_id}
                             onChange={handleChange}
-                            placeholder="ID врача"
-                            type="number"
                             className="border p-2 rounded"
                             required
-                        />
+                        >
+                            <option value="">Выберите врача</option>
+                            {doctors.map((doctor) => (
+                                <option key={doctor.ID} value={doctor.ID}>
+                                    {doctor.full_name}
+                                </option>
+                            ))}
+                        </select>
                         <div>
                             <label className="block text-gray-700 mb-2">Выберите дни (не более 3):</label>
                             <div className="flex flex-wrap gap-2">

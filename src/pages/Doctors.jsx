@@ -162,7 +162,7 @@ const Doctors = () => {
                 {doctors.length > 0 ? (
                     doctors.map((doctor) => (
                         <DoctorCard
-                            key={doctor.id}
+                            key={doctor.ID}
                             doctor={doctor}
                             onDelete={handleDelete}
                             role={user?.role}

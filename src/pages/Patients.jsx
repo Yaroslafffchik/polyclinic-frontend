@@ -6,6 +6,7 @@ import PatientCard from './PatientCard';
 const Patients = () => {
     const { user } = useContext(AuthContext);
     const [patients, setPatients] = useState([]);
+    const [doctors, setDoctors] = useState([]);
     const [formData, setFormData] = useState({
         full_name: '',
         address: '',
@@ -18,6 +19,7 @@ const Patients = () => {
 
     useEffect(() => {
         fetchPatients();
+        fetchDoctors();
     }, []);
 
     const fetchPatients = async () => {
@@ -34,6 +36,18 @@ const Patients = () => {
         }
     };
 
+    const fetchDoctors = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:8080/api/doctors', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setDoctors(response.data);
+        } catch (error) {
+            console.error('Fetch doctors error:', error);
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -43,8 +57,9 @@ const Patients = () => {
         const submitData = {
             ...formData,
             age: parseInt(formData.age, 10) || 0,
-            doctor_id: parseInt(formData.doctor_id, 10) || 0
+            doctor_id: formData.doctor_id ? parseInt(formData.doctor_id, 10) : null // Приведение к uint
         };
+        console.log('Submitting data:', submitData); // Отладка
         try {
             const token = localStorage.getItem('token');
             if (editPatientId) {
@@ -82,7 +97,7 @@ const Patients = () => {
             gender: patient.gender || '',
             age: (patient.age || '').toString(),
             insurance_number: patient.insurance_number || '',
-            doctor_id: (patient.DoctorID || '').toString()
+            doctor_id: patient.DoctorID ? patient.DoctorID.toString() : '' // Используем DoctorID как строку для select
         });
     };
 
@@ -138,15 +153,19 @@ const Patients = () => {
                             className="border p-2 rounded"
                             required
                         />
-                        <input
+                        <select
                             name="doctor_id"
                             value={formData.doctor_id}
                             onChange={handleChange}
-                            placeholder="ID врача"
-                            type="number"
                             className="border p-2 rounded"
-                            required
-                        />
+                        >
+                            <option value="">Не назначен</option>
+                            {doctors.map((doctor) => (
+                                <option key={doctor.ID} value={doctor.ID.toString()}>
+                                    {doctor.full_name}
+                                </option>
+                            ))}
+                        </select>
                         <div className="col-span-2 flex space-x-2">
                             <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                                 {editPatientId ? 'Обновить' : 'Создать'}

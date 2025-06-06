@@ -8,14 +8,15 @@ const PatientCard = ({ patient, onEdit, role }) => {
             <div className="flex items-center">
                 <img
                     src={patientPhoto}
-                    alt={`Фото пациента ${patient.full_name}`}
+                    alt={`Фото пациента ${patient.last_name} ${patient.first_name}`}
                     className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
                     <Link to={`/patients/${patient.ID}`} className="text-lg font-semibold hover:underline">
-                        {patient.full_name}
+                        {`${patient.last_name} ${patient.first_name} ${patient.middle_name || ''}`.trim()}
                     </Link>
                     <p className="text-gray-600">{patient.age} лет</p>
+                    <p className="text-gray-600"><strong>Дата карточки:</strong> {new Date(patient.card_created_at).toLocaleDateString()}</p>
                 </div>
             </div>
             {role === 'registrar' && (

@@ -61,16 +61,20 @@ const DoctorDetails = () => {
                 <p><strong>Стаж:</strong> {doctor.experience} лет</p>
                 <p><strong>Дата рождения:</strong> {doctor.birth_date}</p>
                 <p><strong>Участок:</strong> {doctor.Section ? doctor.Section.name : 'Не назначен'}</p>
+                <p><strong>Количество обслуженных пациентов за последний месяц:</strong> {doctor.visit_count}</p>
             </div>
+
+            <p><strong>Участки:</strong> {doctor.Sections?.map(s => s.name).join(', ') || 'Не назначены'}</p>
 
             <h2 className="text-xl font-bold mb-4">Расписание</h2>
             {schedules.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 mb-6">
                     {schedules.map((schedule) => (
                         <div key={schedule.ID} className="bg-white p-4 rounded-lg shadow-md">
-                            <p><strong>Дни:</strong> {schedule.Days}</p>
-                            <p><strong>Время:</strong> {schedule.Time}</p>
-                            <p><strong>Кабинет:</strong> {schedule.Room}</p>
+                            <p><strong>Участок:</strong> {schedule.Section?.name || 'Не указан'}</p>
+                            <p><strong>Дни:</strong> {schedule.days}</p>
+                            <p><strong>Время:</strong> {schedule.time}</p>
+                            <p><strong>Кабинет:</strong> {schedule.room}</p>
                         </div>
                     ))}
                 </div>

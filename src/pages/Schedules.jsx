@@ -6,8 +6,10 @@ const Schedules = () => {
     const { user } = useContext(AuthContext);
     const [schedules, setSchedules] = useState([]);
     const [doctors, setDoctors] = useState([]);
+    const [sections, setSections] = useState([]);
     const [formData, setFormData] = useState({
         doctor_id: '',
+        section_id: '',
         selectedDays: [],
         time: '',
         room: ''
@@ -19,6 +21,7 @@ const Schedules = () => {
     useEffect(() => {
         fetchSchedules();
         fetchDoctors();
+        fetchSections();
     }, []);
 
     const fetchSchedules = async () => {
@@ -27,13 +30,11 @@ const Schedules = () => {
             const response = await axios.get('http://localhost:8080/api/schedules', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Fetched schedules:', response.data);
             setSchedules(response.data);
             setError('');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
             setError(`Ошибка при загрузке расписаний: ${errorMsg}`);
-            console.error('Fetch error:', error);
         }
     };
 
@@ -46,6 +47,18 @@ const Schedules = () => {
             setDoctors(response.data);
         } catch (error) {
             console.error('Fetch doctors error:', error);
+        }
+    };
+
+    const fetchSections = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:8080/api/sections', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSections(response.data);
+        } catch (error) {
+            console.error('Fetch sections error:', error);
         }
     };
 
@@ -71,12 +84,13 @@ const Schedules = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.doctor_id || formData.selectedDays.length === 0 || !formData.time || !formData.room) {
+        if (!formData.doctor_id || !formData.section_id || formData.selectedDays.length === 0 || !formData.time || !formData.room) {
             setError('Пожалуйста, заполните все обязательные поля');
             return;
         }
         const submitData = {
             doctor_id: parseInt(formData.doctor_id, 10) || null,
+            section_id: parseInt(formData.section_id, 10) || null,
             days: formData.selectedDays.join(', '),
             time: formData.time,
             room: formData.room
@@ -89,21 +103,17 @@ const Schedules = () => {
             fetchSchedules();
             setFormData({
                 doctor_id: '',
+                section_id: '',
                 selectedDays: [],
                 time: '',
                 room: ''
             });
             setError('');
-            showToast('Расписание создано успешно');
+            alert('Расписание создано успешно');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
             setError(`Ошибка при создании расписания: ${errorMsg}`);
-            console.error('Post error:', error);
         }
-    };
-
-    const showToast = (message) => {
-        alert(message);
     };
 
     return (
@@ -125,6 +135,20 @@ const Schedules = () => {
                             {doctors.map((doctor) => (
                                 <option key={doctor.ID} value={doctor.ID}>
                                     {doctor.full_name}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            name="section_id"
+                            value={formData.section_id}
+                            onChange={handleChange}
+                            className="border p-2 rounded"
+                            required
+                        >
+                            <option value="">Выберите участок</option>
+                            {sections.map((section) => (
+                                <option key={section.ID} value={section.ID}>
+                                    {section.name}
                                 </option>
                             ))}
                         </select>
@@ -170,10 +194,11 @@ const Schedules = () => {
                 {schedules.length > 0 ? (
                     schedules.map((schedule) => (
                         <div key={schedule.ID} className="bg-white p-4 rounded-lg shadow-md">
-                            <p><strong>ID врача:</strong> {schedule.DoctorID}</p>
-                            <p><strong>Дни:</strong> {schedule.Days}</p>
-                            <p><strong>Время:</strong> {schedule.Time}</p>
-                            <p><strong>Кабинет:</strong> {schedule.Room}</p>
+                            <p><strong>Врач:</strong> {schedule.Doctor?.full_name || 'Неизвестно'}</p>
+                            <p><strong>Участок:</strong> {schedule.Section?.name || 'Не указан'}</p>
+                            <p><strong>Дни:</strong> {schedule.days}</p>
+                            <p><strong>Время:</strong> {schedule.time}</p>
+                            <p><strong>Кабинет:</strong> {schedule.room}</p>
                         </div>
                     ))
                 ) : (

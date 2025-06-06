@@ -13,7 +13,8 @@ const Visits = () => {
         complaints: '',
         diagnosis: '',
         prescription: '',
-        sick_leave: false
+        sick_leave: false,
+        sick_leave_duration: 0 // Новое поле
     });
     const [error, setError] = useState('');
 
@@ -48,7 +49,7 @@ const Visits = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+        setFormData({ ...formData, [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value, 10) || 0 : value });
     };
 
     const handleSubmit = async (e) => {
@@ -64,7 +65,8 @@ const Visits = () => {
             complaints: formData.complaints,
             diagnosis: formData.diagnosis,
             prescription: formData.prescription,
-            sick_leave: formData.sick_leave
+            sick_leave: formData.sick_leave,
+            sick_leave_duration: formData.sick_leave ? formData.sick_leave_duration : 0 // Отправляем 0, если больничный не выписан
         };
         try {
             const token = localStorage.getItem('token');
@@ -78,7 +80,8 @@ const Visits = () => {
                 complaints: '',
                 diagnosis: '',
                 prescription: '',
-                sick_leave: false
+                sick_leave: false,
+                sick_leave_duration: 0
             });
             setError('');
             showToast('Посещение добавлено успешно');
@@ -110,7 +113,7 @@ const Visits = () => {
                             <option value="">Выберите пациента</option>
                             {patients.map((patient) => (
                                 <option key={patient.ID} value={patient.ID}>
-                                    {patient.full_name}
+                                    {patient.last_name} {patient.first_name} {patient.middle_name}
                                 </option>
                             ))}
                         </select>
@@ -124,7 +127,7 @@ const Visits = () => {
                             <option value="">Выберите врача</option>
                             {doctors.map((doctor) => (
                                 <option key={doctor.ID} value={doctor.ID}>
-                                    {doctor.full_name}
+                                    {doctor.last_name} {doctor.first_name} {doctor.middle_name}
                                 </option>
                             ))}
                         </select>
@@ -167,6 +170,18 @@ const Visits = () => {
                             />
                             Больничный
                         </label>
+                        {formData.sick_leave && (
+                            <input
+                                type="number"
+                                name="sick_leave_duration"
+                                value={formData.sick_leave_duration}
+                                onChange={handleChange}
+                                placeholder="Срок больничного (дни)"
+                                className="border p-2 rounded"
+                                min="1"
+                                required
+                            />
+                        )}
                         <div className="col-span-2">
                             <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                                 Добавить
@@ -176,7 +191,6 @@ const Visits = () => {
                     {error && <div className="text-red-500 mt-2">{error}</div>}
                 </div>
             )}
-            {/* Здесь можно добавить отображение списка посещений */}
         </div>
     );
 };

@@ -6,18 +6,22 @@ import DoctorCard from './DoctorCard';
 const Doctors = () => {
     const { user } = useContext(AuthContext);
     const [doctors, setDoctors] = useState([]);
+    const [sections, setSections] = useState([]);
     const [formData, setFormData] = useState({
-        full_name: '',
+        last_name: '',
+        first_name: '',
+        middle_name: '',
         category: '',
         birth_date: '',
         specialization: '',
         experience: '',
-        section_id: ''
+        section_ids: []
     });
     const [error, setError] = useState('');
 
     useEffect(() => {
         fetchDoctors();
+        fetchSections();
     }, []);
 
     const fetchDoctors = async () => {
@@ -26,13 +30,23 @@ const Doctors = () => {
             const response = await axios.get('http://localhost:8080/api/doctors', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Fetched doctors:', response.data);
             setDoctors(response.data);
             setError('');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
             setError(`Ошибка при загрузке врачей: ${errorMsg}`);
-            console.error('Fetch error:', error);
+        }
+    };
+
+    const fetchSections = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get('http://localhost:8080/api/sections', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSections(response.data);
+        } catch (error) {
+            console.error('Fetch sections error:', error);
         }
     };
 
@@ -40,34 +54,49 @@ const Doctors = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleSectionChange = (sectionId) => {
+        let newSectionIds = [...formData.section_ids];
+        if (newSectionIds.includes(sectionId)) {
+            newSectionIds = newSectionIds.filter(id => id !== sectionId);
+        } else {
+            newSectionIds.push(sectionId);
+        }
+        setFormData({ ...formData, section_ids: newSectionIds });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const submitData = {
-            ...formData,
+            last_name: formData.last_name,
+            first_name: formData.first_name,
+            middle_name: formData.middle_name,
+            category: formData.category,
+            birth_date: formData.birth_date,
+            specialization: formData.specialization,
             experience: parseInt(formData.experience, 10) || 0,
-            section_id: parseInt(formData.section_id, 10) || 0
+            section_ids: formData.section_ids.map(id => parseInt(id, 10))
         };
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:8080/api/doctors', submitData, {
+            await axios.post('http://localhost:8080/api/doctors', submitData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log('Post response:', response.data);
             fetchDoctors();
             setFormData({
-                full_name: '',
+                last_name: '',
+                first_name: '',
+                middle_name: '',
                 category: '',
                 birth_date: '',
                 specialization: '',
                 experience: '',
-                section_id: ''
+                section_ids: []
             });
             setError('');
-            showToast('Врач создан успешно');
+            alert('Врач создан успешно');
         } catch (error) {
             const errorMsg = error.response?.data?.error || error.message;
             setError(`Ошибка при создании врача: ${errorMsg}`);
-            console.error('Post error:', error);
         }
     };
 
@@ -79,17 +108,12 @@ const Doctors = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 fetchDoctors();
-                showToast('Врач удален успешно');
+                alert('Врач удален успешно');
             } catch (error) {
                 const errorMsg = error.response?.data?.error || error.message;
                 setError(`Ошибка при удалении врача: ${errorMsg}`);
-                console.error('Delete error:', error);
             }
         }
-    };
-
-    const showToast = (message) => {
-        alert(message);
     };
 
     return (
@@ -101,12 +125,27 @@ const Doctors = () => {
                     <h3 className="text-xl font-semibold mb-4">Создать врача</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
-                            name="full_name"
-                            value={formData.full_name}
+                            name="last_name"
+                            value={formData.last_name}
                             onChange={handleChange}
-                            placeholder="ФИО"
+                            placeholder="Фамилия"
                             className="border p-2 rounded"
                             required
+                        />
+                        <input
+                            name="first_name"
+                            value={formData.first_name}
+                            onChange={handleChange}
+                            placeholder="Имя"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="middle_name"
+                            value={formData.middle_name}
+                            onChange={handleChange}
+                            placeholder="Отчество"
+                            className="border p-2 rounded"
                         />
                         <input
                             name="category"
@@ -141,15 +180,22 @@ const Doctors = () => {
                             className="border p-2 rounded"
                             required
                         />
-                        <input
-                            name="section_id"
-                            value={formData.section_id}
-                            onChange={handleChange}
-                            placeholder="ID участка"
-                            type="number"
-                            className="border p-2 rounded"
-                            required
-                        />
+                        <div>
+                            <label className="block text-gray-700 mb-2">Участки:</label>
+                            <div className="flex flex-wrap gap-2">
+                                {sections.map((section) => (
+                                    <label key={section.ID} className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.section_ids.includes(section.ID.toString())}
+                                            onChange={() => handleSectionChange(section.ID.toString())}
+                                            className="mr-2"
+                                        />
+                                        {section.name}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                         <div className="col-span-2">
                             <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                                 Создать

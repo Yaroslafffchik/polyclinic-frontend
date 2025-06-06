@@ -8,7 +8,9 @@ const Patients = () => {
     const [patients, setPatients] = useState([]);
     const [doctors, setDoctors] = useState([]);
     const [formData, setFormData] = useState({
-        full_name: '',
+        last_name: '',
+        first_name: '',
+        middle_name: '',
         address: '',
         gender: '',
         age: '',
@@ -55,11 +57,16 @@ const Patients = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const submitData = {
-            ...formData,
+            last_name: formData.last_name,
+            first_name: formData.first_name,
+            middle_name: formData.middle_name,
+            address: formData.address,
+            gender: formData.gender,
             age: parseInt(formData.age, 10) || 0,
-            doctor_id: formData.doctor_id ? parseInt(formData.doctor_id, 10) : null // Приведение к uint
+            insurance_number: formData.insurance_number,
+            doctor_id: formData.doctor_id ? parseInt(formData.doctor_id, 10) : 0 // 0 если не выбран
         };
-        console.log('Submitting data:', submitData); // Отладка
+        console.log('Submitting data:', submitData);
         try {
             const token = localStorage.getItem('token');
             if (editPatientId) {
@@ -74,7 +81,9 @@ const Patients = () => {
             }
             fetchPatients();
             setFormData({
-                full_name: '',
+                last_name: '',
+                first_name: '',
+                middle_name: '',
                 address: '',
                 gender: '',
                 age: '',
@@ -92,12 +101,14 @@ const Patients = () => {
     const handleEdit = (patient) => {
         setEditPatientId(patient.ID);
         setFormData({
-            full_name: patient.full_name || '',
+            last_name: patient.last_name || '',
+            first_name: patient.first_name || '',
+            middle_name: patient.middle_name || '',
             address: patient.address || '',
             gender: patient.gender || '',
             age: (patient.age || '').toString(),
             insurance_number: patient.insurance_number || '',
-            doctor_id: patient.DoctorID ? patient.DoctorID.toString() : '' // Используем DoctorID как строку для select
+            doctor_id: patient.DoctorID ? patient.DoctorID.toString() : ''
         });
     };
 
@@ -113,12 +124,27 @@ const Patients = () => {
                     <h3 className="text-xl font-semibold mb-4">{editPatientId ? 'Редактировать пациента' : 'Создать пациента'}</h3>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
-                            name="full_name"
-                            value={formData.full_name}
+                            name="last_name"
+                            value={formData.last_name}
                             onChange={handleChange}
-                            placeholder="ФИО"
+                            placeholder="Фамилия"
                             className="border p-2 rounded"
                             required
+                        />
+                        <input
+                            name="first_name"
+                            value={formData.first_name}
+                            onChange={handleChange}
+                            placeholder="Имя"
+                            className="border p-2 rounded"
+                            required
+                        />
+                        <input
+                            name="middle_name"
+                            value={formData.middle_name}
+                            onChange={handleChange}
+                            placeholder="Отчество"
+                            className="border p-2 rounded"
                         />
                         <input
                             name="address"
@@ -159,7 +185,7 @@ const Patients = () => {
                             onChange={handleChange}
                             className="border p-2 rounded"
                         >
-                            <option value="">Не назначен</option>
+                            <option value="0">Не назначен</option>
                             {doctors.map((doctor) => (
                                 <option key={doctor.ID} value={doctor.ID.toString()}>
                                     {doctor.full_name}

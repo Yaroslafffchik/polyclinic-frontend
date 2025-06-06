@@ -8,14 +8,15 @@ const DoctorCard = ({ doctor, onDelete, role }) => {
             <div className="flex items-center">
                 <img
                     src={doctorPhoto}
-                    alt={`Фото врача ${doctor.full_name}`}
+                    alt={`Фото врача ${doctor.last_name} ${doctor.first_name}`}
                     className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
                     <Link to={`/doctors/${doctor.ID}`} className="text-lg font-semibold hover:underline">
-                        {doctor.full_name}
+                        {`${doctor.last_name} ${doctor.first_name} ${doctor.middle_name || ''}`.trim()}
                     </Link>
                     <p className="text-gray-600">{doctor.specialization}</p>
+                    <p className="text-gray-600">Участки: {doctor.Sections?.map(s => s.name).join(', ') || 'Не назначены'}</p>
                 </div>
             </div>
             {role === 'registrar' && (

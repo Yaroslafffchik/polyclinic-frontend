@@ -14,8 +14,9 @@ const Navbar = () => {
                     <>
                         <li><Link to="/patients">Пациенты</Link></li>
                         <li><Link to="/doctors">Врачи</Link></li>
-                        <li><Link to="/sections">Участки</Link></li>
+                        {user.role === 'registrar' && <li><Link to="/sections">Участки</Link></li>}
                         {user.role === 'registrar' && <li><Link to="/schedules">Расписания</Link></li>}
+                        {user.role === 'registrar' && <li><Link to="/schedules/specialization">Расписания по специализации</Link></li>}
                         <li><Link to="/visits">Посещения</Link></li>
                         <li><button onClick={logout}>Выйти</button></li>
                     </>

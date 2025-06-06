@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Sections = () => {
     const { user } = useAuth();
@@ -94,9 +95,14 @@ const Sections = () => {
 
             <div className="grid grid-cols-1 gap-4">
                 {sections.map((section) => (
-                    <div key={section.ID} className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
+                    <div key={section.ID}
+                         className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
                         <div>
-                            <h3 className="text-lg font-semibold">{section.name}</h3>
+                            <Link to={`/sections/${section.ID}`} className="text-lg font-semibold hover:underline">
+                                {section.name}
+                            </Link>
+                            <p><strong>Адрес:</strong> {section.address}</p>
+                            <p><strong>Количество медсестер:</strong> {section.nurse_count}</p>
                         </div>
                         <button
                             onClick={() => handleDelete(section.ID)}
